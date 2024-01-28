@@ -1,0 +1,24 @@
+Display Text    
+    /usr/bin/guimgr_cli lcd_eng_mode xMessageHere
+
+reset
+    /usr/bin/guimgr_cli lcd_eng_mode 0
+
+It seems overall they use nano-x as the GUI manager. If you want to bit bang raw data to the LCD, /dev/fb0 is your man. You can kill the process that draws to the buffer (nano-X) and it won’t clear it on you anymore, but you’ll lose the backlight control. It’s 128x36px, 1 bit per pixel.
+
+Blank the LCD
+    echo 1 > /sys/class/graphics/fb0/blank
+
+TV static
+    cat /dev/urandom > /dev/fb0
+
+You can control the backlight yourself, but you’ll need a helper program for it. Cross complies on ubuntu with arm-linux-gnueabi-gcc just fine
+    On: ioctl(28, _IOC(0, 0x00, 0xc8, 0x00), 0)
+    Off: ioctl(21, _IOC(0, 0x00, 0xc9, 0x00), 0)
+        Where 28/21 is just an fd to /dev/fb0
+
+#include
+#include
+int main() {
+return ioctl(open(“/dev/fb0”, O_RDWR), _IOC(0, 0x00, 0xc8, 0x00));
+}
